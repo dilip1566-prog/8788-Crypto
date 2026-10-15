@@ -1,0 +1,30 @@
+# This repository is public. Everything below is either your own holdings or
+# generated from them, and none of it belongs on GitHub.
+#
+# A trailing "# comment" on a pattern line is NOT a comment - git treats it as
+# part of the pattern. Keep every comment on its own line.
+
+# Every purchase: coin, price paid, units.
+portfolio.csv
+
+# The full snapshot, holdings included.
+data.json
+
+# The rendered pages, with the data embedded.
+dashboard.html
+dashboard_artifact.html
+
+# The link to your Google Sheet.
+source.json
+
+# Your own symbol overrides. Start from coins.example.json.
+coins.json
+
+# Optional per-coin notes.
+notes.json
+
+# Generated.
+cache/
+__pycache__/
+*.py[cod]
+*.log

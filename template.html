@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  /* ---------------------------------------------------------------- tokens */
+  :root {
+    --ground: #eceff2;
+    --surface: #ffffff;
+    --surface-2: #f4f6f8;
+    --surface-3: #eaeef1;
+    --ink: #12171b;
+    --muted: #5d6871;
+    --faint: #8996a1;
+    --rule: #d5dbe0;
+    --rule-soft: #e6eaee;
+    --accent: #16456b;
+    --accent-soft: #e3ecf4;
+    --gain: #0b6f52;
+    --gain-soft: #e0f0e9;
+    --loss: #ab3529;
+    --loss-soft: #f8e5e2;
+    --flag: #8a6210;
+    --flag-soft: #f6edda;
+    --overlay: rgba(18, 23, 27, .38);
+    --shadow: 0 1px 2px rgba(18, 23, 27, .06), 0 8px 24px -16px rgba(18, 23, 27, .28);
+    --shadow-drawer: -24px 0 60px -30px rgba(18, 23, 27, .5);
+    --pin-shadow: 6px 0 8px -8px rgba(18, 23, 27, .45);
+
+    --display: "Archivo", "Segoe UI", system-ui, sans-serif;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+    --ref-w: 76px;
+    --asset-w: 150px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0c1014;
+      --surface: #141a20;
+      --surface-2: #1a222a;
+      --surface-3: #212b34;
+      --ink: #e7ecf0;
+      --muted: #96a3ad;
+      --faint: #6f7c87;
+      --rule: #2a343d;
+      --rule-soft: #212a32;
+      --accent: #7cbae5;
+      --accent-soft: #172a39;
+      --gain: #40c79a;
+      --gain-soft: #103129;
+      --loss: #f2735f;
+      --loss-soft: #3b1e1b;
+      --flag: #d8a944;
+      --flag-soft: #2f2712;
+      --overlay: rgba(0, 0, 0, .6);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 30px -18px rgba(0, 0, 0, .85);
+      --shadow-drawer: -24px 0 60px -30px rgba(0, 0, 0, .9);
+      --pin-shadow: 6px 0 10px -8px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0c1014;
+    --surface: #141a20;
+    --surface-2: #1a222a;
+    --surface-3: #212b34;
+    --ink: #e7ecf0;
+    --muted: #96a3ad;
+    --faint: #6f7c87;
+    --rule: #2a343d;
+    --rule-soft: #212a32;
+    --accent: #7cbae5;
+    --accent-soft: #172a39;
+    --gain: #40c79a;
+    --gain-soft: #103129;
+    --loss: #f2735f;
+    --loss-soft: #3b1e1b;
+    --flag: #d8a944;
+    --flag-soft: #2f2712;
+    --overlay: rgba(0, 0, 0, .6);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 30px -18px rgba(0, 0, 0, .85);
+    --shadow-drawer: -24px 0 60px -30px rgba(0, 0, 0, .9);
+    --pin-shadow: 6px 0 10px -8px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scrollbar-color: var(--rule) var(--ground); scrollbar-width: thin; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--display);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: var(--surface-2); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--rule);
+    border: 3px solid var(--surface-2);
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+  ::-webkit-scrollbar-corner { background: var(--surface-2); }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap {
+    max-width: 1660px;
+    margin: 0 auto;
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* -------------------------------------------------------------- masthead */
+  .masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(23px, 2.8vw, 31px);
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.02;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .stamp {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .stamp b { color: var(--ink); font-weight: 600; }
+
+  .stamp-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 3px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+
+  .stamp-line::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gain);
+    flex: none;
+  }
+
+  .stamp-line.is-error::before { background: var(--loss); }
+
+  #refresh-now {
+    margin-left: 4px;
+    padding: 3px 9px;
+    font: 500 9.5px/1.3 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  #refresh-now:hover:not(:disabled) { color: var(--ground); background: var(--accent); }
+  #refresh-now:disabled { cursor: progress; opacity: .65; }
+  #refresh-now[hidden] { display: none; }
+
+  .switch-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  .switch {
+    display: inline-flex;
+    padding: 2px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+  }
+
+  .switch button {
+    font: 500 10px/1 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background .14s, color .14s;
+  }
+
+  .switch button:hover:not(:disabled) { color: var(--ink); }
+  .switch button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .switch button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--ground);
+  }
+
+  /* ---------------------------------------------------------------- totals */
+  .totals {
+    display: grid;
+    grid-template-columns: minmax(430px, 1.7fr) minmax(300px, 1fr);
+    gap: 14px;
+  }
+
+  .card {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 13px 16px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--accent);
+  }
+
+  .card.is-up::before { background: var(--gain); }
+  .card.is-down::before { background: var(--loss); }
+
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .big {
+    font-family: var(--mono);
+    font-size: clamp(24px, 2.6vw, 31px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+  }
+
+  .delta {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding-top: 9px;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .grid div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+  .grid dt, .stat-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  .grid dd {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* movers card */
+  .movers {
+    display: flex;
+    gap: 16px;
+    padding-top: 9px;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  .mover {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mover + .mover { padding-left: 16px; border-left: 1px dotted var(--rule); }
+  .mover .who { font: 600 14px/1.2 var(--display); }
+  .mover .who small { display: block; font: 400 10px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .mover .num { font: 600 15px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* allocation */
+  .alloc { display: flex; align-items: center; gap: 16px; }
+  .alloc svg { flex: none; }
+
+  .alloc-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 3px 10px;
+    min-width: 0;
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .alloc-list div { display: flex; align-items: center; gap: 7px; }
+  .alloc-list i { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+  .alloc-list span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alloc-list b { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* --------------------------------------------------------------- notices */
+  .notice {
+    padding: 11px 15px;
+    background: var(--flag-soft);
+    border: 1px solid var(--flag);
+    border-left-width: 3px;
+    border-radius: 4px;
+    font-family: var(--serif);
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .notice.bad { background: var(--loss-soft); border-color: var(--loss); }
+  .notice b { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; }
+  .notice ul { margin: 6px 0 0; padding-left: 18px; }
+
+  /* --------------------------------------------------------------- toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+
+  .search {
+    flex: 0 1 300px;
+    min-width: 170px;
+    margin-left: auto;
+    padding: 8px 12px;
+    font: 400 13px/1.3 var(--mono);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  .search::placeholder { color: var(--faint); }
+
+  .chip {
+    font: 500 10.5px/1 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 9px 13px;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background .14s, color .14s, border-color .14s;
+  }
+
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--ground); }
+  .chip.is-ref[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+
+  .chip-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    padding-left: 9px;
+    margin-left: 2px;
+    border-left: 1px solid var(--rule);
+  }
+
+  .chip { padding: 8px 12px; }
+
+  /* Collapsing the summary hands the whole window to the table. */
+  body.no-summary #totals { display: none; }
+
+  .chip.is-toggle {
+    margin-left: auto;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .chip.is-toggle[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ground);
+  }
+
+  /* With the toggle taking the auto margin, the search sits beside it. */
+  .toolbar .search { margin-left: 10px; }
+
+  /* ----------------------------------------------------------------- table */
+  /* The wrapper owns both scroll axes, so the sticky header actually sticks
+     and the pinned first columns stay put while the rest slides. */
+  .ledger-shell {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    box-shadow: var(--shadow);
+    overflow: auto;
+    max-height: calc(100vh - 130px);
+    overscroll-behavior: contain;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    padding: 7px 8px;
+    font: 500 9.5px/1.25 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: right;
+    max-width: 78px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  thead th.left { text-align: left; }
+  thead th:not([data-sort]) { cursor: default; }
+  thead th[data-sort]:hover { color: var(--ink); }
+  .arrow { display: inline-block; width: 9px; font-size: 8px; opacity: .6; }
+
+  tbody td {
+    padding: 5px 8px;
+    text-align: right;
+    white-space: nowrap;
+    font: 400 12.5px/1.3 var(--mono);
+    border-bottom: 1px solid var(--rule-soft);
+    background: var(--surface);
+  }
+
+  tbody td.left { text-align: left; }
+
+  /* pinned reference + asset columns */
+  .ref-col, .asset-col { position: sticky; z-index: 2; background: var(--surface); }
+  .ref-col { left: 0; width: var(--ref-w); min-width: var(--ref-w); max-width: var(--ref-w); text-align: left; }
+  .asset-col { left: var(--ref-w); width: var(--asset-w); min-width: var(--asset-w); text-align: left; }
+  thead th.ref-col, thead th.asset-col { z-index: 4; max-width: none; background: var(--surface-2); }
+
+  td.ref-col { color: var(--muted); font-size: 11.5px; font-weight: 500; }
+
+  .is-pinned .asset-col::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -8px;
+    bottom: -1px;
+    width: 8px;
+    pointer-events: none;
+    box-shadow: var(--pin-shadow);
+  }
+
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: var(--surface-2); }
+  tr.row.active td { background: var(--accent-soft); }
+
+  td.asset-col { padding-left: 20px; }
+
+  td.asset-col::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--faint);
+  }
+
+  tr.up td.asset-col::before { background: var(--gain); }
+  tr.down td.asset-col::before { background: var(--loss); }
+
+  .coin { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .coin b { font: 600 13px/1.2 var(--display); letter-spacing: .01em; }
+
+  .coin small {
+    font: 400 9.5px/1.25 var(--mono);
+    color: var(--faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 130px;
+  }
+
+  .sub-line { display: block; font: 400 9.5px/1.25 var(--mono); color: var(--faint); }
+
+  .up-txt { color: var(--gain); }
+  .down-txt { color: var(--loss); }
+  .flat-txt { color: var(--muted); }
+
+  .pl-cash { font-weight: 600; font-size: 13px; }
+
+  .pct-pill {
+    display: inline-block;
+    min-width: 62px;
+    padding: 2px 7px;
+    font-weight: 600;
+    font-size: 12px;
+    text-align: center;
+    background: var(--surface-3);
+    color: var(--muted);
+    border-radius: 3px;
+  }
+
+  .pct-pill.up { color: var(--gain); background: var(--gain-soft); }
+  .pct-pill.down { color: var(--loss); background: var(--loss-soft); }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 7px;
+    font: 500 9.5px/1.3 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .tag.flag { color: var(--flag); background: var(--flag-soft); }
+  .tag.bad { color: var(--loss); background: var(--loss-soft); }
+  .tag.plain { color: var(--muted); background: transparent; border-color: var(--rule); }
+
+  .news-col { max-width: 300px; min-width: 240px; white-space: normal; }
+
+  /* One line only. The whole headline is in the title attribute and in the
+     detail panel, so nothing is lost by clipping it here. */
+  .news-col a.headline {
+    display: block;
+    font: 500 12px/1.35 var(--display);
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .news-col a.headline:hover { color: var(--accent); text-decoration: underline; }
+  .news-col .news-meta { display: flex; gap: 5px; align-items: center; margin-top: 2px; }
+  .news-col .tag { padding: 1px 6px; font-size: 9px; text-decoration: none; }
+  a.tag:hover { color: var(--ground); background: var(--accent); }
+  a.tag.bad:hover { color: var(--ground); background: var(--loss); }
+  a.tag.flag:hover { color: var(--ground); background: var(--flag); }
+
+  /* Opens the row's detail panel, where every headline is listed in full. */
+  .more {
+    padding: 1px 6px;
+    font: 500 9px/1.3 var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .more:hover { color: var(--ink); border-color: var(--accent); }
+
+  .caret { color: var(--faint); font-size: 15px; }
+  tr.row:hover .caret, tr.row.active .caret { color: var(--ink); }
+
+  .empty {
+    padding: 46px 24px;
+    text-align: center;
+    font: 400 15px/1.5 var(--serif);
+    color: var(--muted);
+  }
+
+  .footnote {
+    font: 400 10.5px/1.4 var(--mono);
+    color: var(--faint);
+    text-align: center;
+    padding: 0 0 2px;
+    margin: 0;
+  }
+
+  /* ---------------------------------------------------------------- drawer */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: var(--overlay);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .22s ease, visibility .22s;
+  }
+
+  .scrim.open { opacity: 1; visibility: visible; }
+
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 50;
+    width: min(660px, 100vw);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-left: 1px solid var(--rule);
+    box-shadow: var(--shadow-drawer);
+    transform: translateX(100%);
+    transition: transform .26s cubic-bezier(.32, .72, 0, 1);
+  }
+
+  .drawer.open { transform: none; }
+
+  .drawer-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+
+  .drawer-title { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .drawer-title h2 { margin: 0; font: 700 25px/1.05 var(--display); letter-spacing: -.02em; }
+  .drawer-title p { margin: 0; font: 400 13.5px/1.4 var(--display); color: var(--muted); }
+
+  .drawer-figs {
+    display: flex;
+    gap: 18px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+    flex-wrap: wrap;
+  }
+
+  .drawer-figs div { display: flex; flex-direction: column; gap: 2px; }
+  .drawer-figs b { font: 600 17px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+
+  .close {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    font: 400 19px/1 var(--display);
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .close:hover { color: var(--ink); border-color: var(--accent); }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 22px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .panel { display: flex; flex-direction: column; gap: 10px; }
+
+  .panel h3 {
+    margin: 0;
+    padding-bottom: 7px;
+    font: 600 10.5px/1.2 var(--mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel p, .panel li {
+    margin: 0;
+    font: 400 14.5px/1.62 var(--serif);
+    color: var(--ink);
+    max-width: 64ch;
+  }
+
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 13px 14px; }
+  .kv div { display: flex; flex-direction: column; gap: 2px; }
+  .kv b { font: 500 14.5px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+
+  .chart-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 14px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+  }
+
+  .chart-box svg { width: 100%; height: auto; display: block; }
+
+  .range-row { display: flex; gap: 6px; }
+
+  .range-row button {
+    font: 500 10px/1 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .range-row button[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+
+  .chart-ends {
+    display: flex;
+    justify-content: space-between;
+    font: 400 10.5px/1.2 var(--mono);
+    color: var(--faint);
+  }
+
+  .range { display: flex; flex-direction: column; gap: 6px; }
+  .range-bar { position: relative; height: 6px; border-radius: 3px; background: var(--surface-3); }
+  .range-bar i { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--ink); border-radius: 1px; }
+  .range-ends { display: flex; justify-content: space-between; font: 400 11px/1.2 var(--mono); color: var(--muted); }
+
+  .lots { width: 100%; border-collapse: collapse; font: 400 12.5px/1.4 var(--mono); }
+  .lots th {
+    text-align: right;
+    padding: 6px 8px;
+    font: 500 9.5px/1.2 var(--mono);
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    border-bottom: 1px solid var(--rule);
+    background: transparent;
+    position: static;
+  }
+  .lots th.left, .lots td.left { text-align: left; }
+  .lots td { padding: 8px; text-align: right; border-bottom: 1px solid var(--rule-soft); white-space: nowrap; }
+  .lots tr:last-child td { border-bottom: 0; }
+
+  .news-item { display: flex; flex-direction: column; gap: 5px; padding: 11px 0; border-bottom: 1px dotted var(--rule); }
+  .news-item:last-child { border-bottom: 0; }
+
+  .news-item a {
+    font: 600 14px/1.35 var(--display);
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .news-item a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .news-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    font: 400 10.5px/1.3 var(--mono);
+    color: var(--faint);
+  }
+
+  .news-why { font: italic 400 13px/1.5 var(--serif); color: var(--muted); }
+
+  .sub {
+    margin: 4px 0 0;
+    font: 400 10px/1.3 var(--mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  @media (max-width: 1100px) {
+    .totals { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  }
+
+  @media (max-width: 860px) {
+    :root { --ref-w: 60px; --asset-w: 116px; }
+    .wrap { padding: 20px 12px 20px; gap: 15px; }
+    .masthead { align-items: flex-start; }
+    .stamp { justify-content: flex-start; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .ledger-shell { max-height: calc(100vh - 120px); }
+    .drawer { width: 100vw; }
+    .drawer-head, .drawer-figs, .drawer-body { padding-left: 16px; padding-right: 16px; }
+    .news-col { min-width: 200px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <h1>Crypto</h1>
+    </div>
+    <div class="stamp">
+      <div class="switch-row">
+        <div class="switch" role="group" aria-label="Display currency">
+          <button type="button" data-ccy="USD" aria-pressed="true">USD</button>
+          <button type="button" data-ccy="GBP" aria-pressed="false">GBP</button>
+        </div>
+        <div class="switch" role="group" aria-label="Colour theme">
+          <button type="button" data-theme-mode="system" aria-pressed="true">Auto</button>
+          <button type="button" data-theme-mode="light" aria-pressed="false">Light</button>
+          <button type="button" data-theme-mode="dark" aria-pressed="false">Dark</button>
+        </div>
+      </div>
+      <span class="stamp-line" id="stamp-line"><b id="stamp-time">&mdash;</b>
+        <button type="button" id="refresh-now" hidden>Refresh</button>
+      </span>
+      <span id="stamp-meta"></span>
+    </div>
+  </header>
+
+  <section class="totals" id="totals"></section>
+  <div id="notices"></div>
+
+  <div class="toolbar">
+    <button class="chip" data-filter="all" aria-pressed="true">All</button>
+    <button class="chip" data-filter="up" aria-pressed="false">In profit</button>
+    <button class="chip" data-filter="down" aria-pressed="false">At a loss</button>
+    <span class="chip-group" id="ref-chips"></span>
+    <button class="chip is-toggle" id="toggle-summary" type="button" aria-pressed="false">Hide totals</button>
+    <input class="search" id="search" type="search" placeholder="Filter by ref, symbol or coin name" aria-label="Filter holdings">
+  </div>
+
+  <div class="ledger-shell" id="shell">
+    <table>
+      <thead>
+        <tr>
+          <th class="ref-col left" data-sort="ref">Our ref <span class="arrow"></span></th>
+          <th class="asset-col left" data-sort="symbol">Asset <span class="arrow"></span></th>
+          <th data-sort="price">Current price <span class="arrow"></span></th>
+          <th data-sort="purchase_price">Purchase price <span class="arrow"></span></th>
+          <th data-sort="units">Units purchased <span class="arrow"></span></th>
+          <th data-sort="pct_24h">24 hrs % <span class="arrow"></span></th>
+          <th data-sort="pct_7d">Weekly % <span class="arrow"></span></th>
+          <th data-sort="pct_30d">Month % <span class="arrow"></span></th>
+          <th data-sort="pct_1y">1 year % <span class="arrow"></span></th>
+          <th data-sort="ath">ATH <span class="arrow"></span></th>
+          <th data-sort="pl">Profit / loss <span class="arrow"></span></th>
+          <th data-sort="pl_pct">P/L % <span class="arrow"></span></th>
+          <th class="left news-col" data-sort="news_count">Latest news <span class="arrow"></span></th>
+          <th aria-label="Open detail"></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-name" hidden>
+  <div class="drawer-head">
+    <div class="drawer-title">
+      <h2 id="drawer-name">&mdash;</h2>
+      <p id="drawer-sub"></p>
+    </div>
+    <button class="close" id="drawer-close" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="drawer-figs" id="drawer-figs"></div>
+  <div class="drawer-body" id="drawer-body"></div>
+</aside>
+
+<script>
+  const DATA = "__PORTFOLIO_DATA__";
+
+  const rowsEl = document.getElementById("rows");
+  const shellEl = document.getElementById("shell");
+  const drawerEl = document.getElementById("drawer");
+  const scrimEl = document.getElementById("scrim");
+
+  const state = { filter: "all", ref: "all", query: "", sort: "current_value",
+                  dir: -1, open: null, ccy: "USD", chartDays: 365,
+                  summaryMode: "auto" };
+
+  const PALETTE = ["#f7931a", "#627eea", "#00d18c", "#8247e5", "#e6007a",
+                   "#2775ca", "#f3ba2f", "#00a3ff", "#ff6b6b", "#7c8ea0"];
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  /* ------------------------------------------------------------ formatting */
+  function rate() { return state.ccy === "GBP" && DATA.fx_gbp ? DATA.fx_gbp : 1; }
+  function unit() { return state.ccy === "GBP" && DATA.fx_gbp ? "£" : "$"; }
+
+  // Crypto spans nine orders of magnitude, so the decimals have to follow the
+  // number: 78,994.63 for bitcoin, 0.00001234 for a meme coin.
+  function places(v) {
+    v = Math.abs(v);
+    if (v >= 1) return 2;
+    if (v >= 0.01) return 4;
+    if (v >= 0.0001) return 6;
+    return 8;
+  }
+
+  function money(v, dp) {
+    if (v == null || !isFinite(v)) return "&mdash;";
+    const val = v * rate();
+    const d = dp == null ? places(val) : dp;
+    return unit() + val.toLocaleString("en-GB",
+      { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+
+  function signed(v) {
+    if (v == null || !isFinite(v)) return "&mdash;";
+    return (v >= 0 ? "+" : "−") + money(Math.abs(v)).replace("&mdash;", "");
+  }
+
+  function pct(v) {
+    if (v == null || !isFinite(v)) return "&mdash;";
+    return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2) + "%";
+  }
+
+  function units(v) {
+    if (v == null) return "&mdash;";
+    const d = v >= 1000 ? 2 : v >= 1 ? 4 : 8;
+    return v.toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: d });
+  }
+
+  // Anything inside a tenth of a percent is noise, not a move.
+  function tone(v) { return v == null ? "" : v > 0.1 ? "up" : v < -0.1 ? "down" : ""; }
+  function toneClass(v) { const t = tone(v); return t === "up" ? "up-txt" : t === "down" ? "down-txt" : "flat-txt"; }
+
+  function shortDate(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (isNaN(d)) return esc(iso);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  /* ----------------------------------------------------------------- theme */
+  function setTheme(mode) {
+    if (mode === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", mode);
+    try { localStorage.setItem("crypto-ledger-theme", mode); } catch (e) { /* private mode */ }
+    document.querySelectorAll("[data-theme-mode]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.themeMode === mode));
+    });
+  }
+
+  document.querySelectorAll("[data-theme-mode]").forEach(function (btn) {
+    btn.addEventListener("click", function () { setTheme(btn.dataset.themeMode); });
+  });
+
+  try { setTheme(localStorage.getItem("crypto-ledger-theme") || "system"); }
+  catch (e) { setTheme("system"); }
+
+  /* -------------------------------------------------------------- currency */
+  document.querySelectorAll("[data-ccy]").forEach(function (btn) {
+    if (btn.dataset.ccy === "GBP" && !DATA.fx_gbp) {
+      btn.disabled = true;
+      btn.title = "No USD/GBP rate in this snapshot";
+      return;
+    }
+    btn.addEventListener("click", function () {
+      state.ccy = btn.dataset.ccy;
+      try { localStorage.setItem("crypto-ledger-ccy", state.ccy); } catch (e) { /* ignore */ }
+      document.querySelectorAll("[data-ccy]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.ccy === state.ccy));
+      });
+      renderTotals();
+      render();
+      if (state.open) openDrawer(state.open);
+    });
+  });
+
+  try {
+    const saved = localStorage.getItem("crypto-ledger-ccy");
+    if (saved === "GBP" && DATA.fx_gbp) {
+      state.ccy = "GBP";
+      document.querySelectorAll("[data-ccy]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.ccy === "GBP"));
+      });
+    }
+  } catch (e) { /* ignore */ }
+
+  /* --------------------------------------------------------------- charts */
+  function donut(alloc) {
+    const size = 108, r = 42, cx = size / 2, cy = size / 2;
+    const circ = 2 * Math.PI * r;
+    let offset = 0;
+    const top = alloc.slice(0, 9);
+    const rest = alloc.slice(9);
+    const parts = top.slice();
+    if (rest.length) {
+      parts.push({ symbol: "Other", share: rest.reduce(function (a, b) { return a + b.share; }, 0) });
+    }
+    const arcs = parts.map(function (a, i) {
+      const len = circ * (a.share / 100);
+      const seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" ' +
+        'stroke="' + PALETTE[i % PALETTE.length] + '" stroke-width="16" ' +
+        'stroke-dasharray="' + len.toFixed(2) + ' ' + (circ - len).toFixed(2) + '" ' +
+        'stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"><title>' +
+        esc(a.symbol) + " " + a.share.toFixed(1) + '%</title></circle>';
+      offset += len;
+      return seg;
+    }).join("");
+
+    const legend = parts.map(function (a, i) {
+      return '<div><i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
+        "<span>" + esc(a.symbol) + "</span><b>" + a.share.toFixed(1) + "%</b></div>";
+    }).join("");
+
+    return '<div class="alloc"><svg width="' + size + '" height="' + size + '" viewBox="0 0 ' +
+      size + " " + size + '" role="img" aria-label="Portfolio allocation">' + arcs +
+      "</svg>" + '<div class="alloc-list">' + legend + "</div></div>";
+  }
+
+  function priceChart(series, days) {
+    if (!series || series.length < 2) {
+      return '<p class="sub">No price history available</p>';
+    }
+    const cut = Date.now() - days * 86400000;
+    let pts = series.filter(function (p) { return p[0] >= cut; });
+    if (pts.length < 2) pts = series.slice();
+
+    const w = 600, h = 170, pad = 6;
+    const values = pts.map(function (p) { return p[1]; });
+    const lo = Math.min.apply(null, values), hi = Math.max.apply(null, values);
+    const span = (hi - lo) || (hi || 1) * 0.02;
+    const x = function (i) { return pad + i * (w - pad * 2) / (pts.length - 1); };
+    const y = function (v) { return pad + (h - pad * 2) * (1 - (v - lo) / span); };
+
+    const line = pts.map(function (p, i) {
+      return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[1]).toFixed(1);
+    }).join(" ");
+    const area = line + " L" + x(pts.length - 1).toFixed(1) + " " + (h - pad) +
+                 " L" + x(0).toFixed(1) + " " + (h - pad) + " Z";
+    const rising = values[values.length - 1] >= values[0];
+    const stroke = rising ? "var(--gain)" : "var(--loss)";
+
+    return '<svg viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none" role="img" ' +
+      'aria-label="Price over the selected period">' +
+      '<path d="' + area + '" fill="' + stroke + '" opacity=".10"/>' +
+      '<path d="' + line + '" fill="none" stroke="' + stroke + '" stroke-width="2" ' +
+      'stroke-linejoin="round" stroke-linecap="round"/></svg>' +
+      '<div class="chart-ends"><span>' + shortDate(new Date(pts[0][0]).toISOString()) +
+      "</span><span>" + money(lo) + " &ndash; " + money(hi) + "</span><span>" +
+      shortDate(new Date(pts[pts.length - 1][0]).toISOString()) + "</span></div>";
+  }
+
+  /* ---------------------------------------------------------------- totals */
+  function renderTotals() {
+    const t = DATA.totals || {};
+    const host = document.getElementById("totals");
+    const dir = t.pl == null ? "" : t.pl > 0 ? "is-up" : t.pl < 0 ? "is-down" : "";
+
+    const mover = function (label, sym, value) {
+      if (!sym) return "";
+      const p = (DATA.positions || []).find(function (x) { return x.symbol === sym; });
+      return '<div class="mover"><div class="who">' + esc(sym) +
+        "<small>" + esc(label) + "</small></div>" +
+        '<div class="num ' + toneClass(value) + '">' + pct(value) +
+        '<span class="sub-line" style="text-align:right">' +
+        (p ? signed(p.pl) : "") + "</span></div></div>";
+    };
+
+    // The money and the movers share one card now: the same story, and it
+    // leaves the whole right-hand column for the allocation.
+    const money =
+      '<section class="card ' + dir + '">' +
+        '<div class="card-head"><span>Portfolio value</span><span>' +
+          (t.day_pct == null ? "" : '<b class="' + toneClass(t.day_pct) + '">' +
+            pct(t.day_pct) + " today</b>") +
+        "</span></div>" +
+        '<div class="big">' + money_(t.value) + "</div>" +
+        '<div class="delta ' + toneClass(t.pl) + '">' + signed(t.pl) +
+          "  (" + pct(t.pl_pct) + ")</div>" +
+        '<dl class="grid">' +
+          "<div><dt>Total invested</dt><dd>" + money_(t.invested) + "</dd></div>" +
+          '<div><dt>Profit / loss</dt><dd class="' + toneClass(t.pl) + '">' +
+            signed(t.pl) + "</dd></div>" +
+          "<div><dt>Assets</dt><dd>" + (t.assets || 0) + "</dd></div>" +
+          "<div><dt>Purchases</dt><dd>" + (t.lots || 0) + "</dd></div>" +
+          "<div><dt>Priced now</dt><dd>" + ((DATA.counts || {}).priced || 0) +
+            " / " + (t.assets || 0) + "</dd></div>" +
+        "</dl>" +
+        '<div class="movers">' +
+          mover("Best performer", t.best, t.best_pct) +
+          mover("Worst performer", t.worst, t.worst_pct) +
+        "</div>" +
+      "</section>";
+
+    const allocation =
+      '<section class="card">' +
+        '<div class="card-head"><span>Allocation by asset</span></div>' +
+        ((t.allocation || []).length ? donut(t.allocation)
+          : '<p class="sub">Nothing priced to allocate</p>') +
+      "</section>";
+
+    host.innerHTML = money + allocation;
+  }
+
+  // The card totals are always whole currency units.
+  function money_(v) { return money(v, 2); }
+
+  /* --------------------------------------------------------------- notices */
+  function renderNotices() {
+    // Only the notice that changes what a number on screen means is shown.
+    // Rows that could not be read, and data-source quibbles, are recorded in
+    // data.json and printed by refresh.py instead of nagging from the page.
+    const host = document.getElementById("notices");
+    const unpriced = (DATA.totals || {}).unpriced || [];
+
+    host.innerHTML = unpriced.length
+      ? '<div class="notice bad"><b>MARKET DATA UNAVAILABLE</b> for ' +
+        esc(unpriced.join(", ")) + ". Last successful update: " +
+        esc(DATA.last_good_display || "never") +
+        ". These are counted in your total invested but left out of the " +
+        "portfolio value, so the profit and loss figures stay honest.</div>"
+      : "";
+  }
+
+  /* ------------------------------------------------------------------ rows */
+  // Two lines, no more: the headline, then its category and how many others
+  // are waiting. The publisher and date move to the detail panel, where there
+  // is room for them.
+  function newsCell(p) {
+    const items = p.news || [];
+    if (!items.length) return '<span class="sub-line">No recent headlines</span>';
+    const top = items[0];
+    const tagClass = top.category === "Hack" ? "tag bad"
+      : top.category === "Regulation" ? "tag flag" : "tag";
+    const label = top.category || top.publisher || "Story";
+
+    return '<a class="headline" href="' + esc(top.link) + '" target="_blank" ' +
+      'rel="noopener" title="' + esc(top.title) +
+      (top.publisher ? " — " + esc(top.publisher) : "") + '">' + esc(top.title) + "</a>" +
+      '<div class="news-meta">' +
+      '<a class="' + tagClass + '" href="' + esc(top.link) + '" target="_blank" ' +
+      'rel="noopener" title="' + esc(top.title) + '">' + esc(label) + "</a>" +
+      (items.length > 1
+        ? '<button type="button" class="more" title="Open ' + esc(p.symbol) +
+          ' to read them">+' + (items.length - 1) + " more</button>"
+        : "") +
+      "</div>";
+  }
+
+  function pill(v) {
+    const t = tone(v);
+    return '<span class="pct-pill ' + t + '">' + pct(v) + "</span>";
+  }
+
+  function visible() {
+    const q = state.query.trim().toLowerCase();
+    const list = (DATA.positions || []).filter(function (p) {
+      if (state.filter === "up" && !(p.pl > 0)) return false;
+      if (state.filter === "down" && !(p.pl < 0)) return false;
+      if (state.ref !== "all" && (p.refs || []).indexOf(state.ref) === -1) return false;
+      if (!q) return true;
+      return (p.symbol + " " + p.name + " " + p.ref).toLowerCase().indexOf(q) !== -1;
+    });
+
+    const key = state.sort;
+    return list.sort(function (a, b) {
+      let x = key === "news_count" ? (a.news || []).length : a[key];
+      let y = key === "news_count" ? (b.news || []).length : b[key];
+      if (typeof x === "string" || typeof y === "string") {
+        x = String(x == null ? "" : x).toLowerCase();
+        y = String(y == null ? "" : y).toLowerCase();
+        return x < y ? -state.dir : x > y ? state.dir : 0;
+      }
+      // A missing number always sorts to the bottom, whichever way we are going.
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (x - y) * state.dir;
+    });
+  }
+
+  function render() {
+    const list = visible();
+    if (!list.length) {
+      rowsEl.innerHTML = '<tr><td class="empty" colspan="14">Nothing matches that filter.</td></tr>';
+      updateFootnote(0);
+      return;
+    }
+
+    rowsEl.innerHTML = list.map(function (p) {
+      const dir = p.pl == null ? "" : p.pl > 0 ? "up" : p.pl < 0 ? "down" : "";
+      const stale = p.price == null;
+
+      return '<tr class="row ' + dir + '" data-symbol="' + esc(p.symbol) + '" tabindex="0">' +
+        '<td class="ref-col left">' + esc(p.ref || "") + "</td>" +
+        '<td class="asset-col left"><div class="coin"><b>' + esc(p.symbol) + "</b>" +
+          "<small>" + esc(p.name || "") + "</small></div></td>" +
+        "<td>" + (stale ? '<span class="tag flag">No price</span>' : money(p.price)) +
+          (stale ? "" : '<span class="sub-line">' + esc(p.price_source || "") + "</span>") + "</td>" +
+        "<td>" + money(p.purchase_price) +
+          '<span class="sub-line">cost ' + money(p.invested, 2) + "</span></td>" +
+        "<td>" + units(p.units) +
+          (p.lot_count > 1 ? '<span class="sub-line">' + p.lot_count + " buys</span>" : "") + "</td>" +
+        "<td>" + pill(p.pct_24h) + "</td>" +
+        "<td>" + pill(p.pct_7d) + "</td>" +
+        "<td>" + pill(p.pct_30d) + "</td>" +
+        "<td>" + pill(p.pct_1y) + "</td>" +
+        "<td>" + money(p.ath) +
+          (p.from_ath_pct == null ? "" : '<span class="sub-line">' + pct(p.from_ath_pct) + " from high</span>") + "</td>" +
+        '<td class="pl-cash ' + toneClass(p.pl) + '">' + signed(p.pl) +
+          (stale ? "" : '<span class="sub-line">value ' + money(p.current_value, 2) + "</span>") + "</td>" +
+        "<td>" + pill(p.pl_pct) + "</td>" +
+        '<td class="left news-col">' + newsCell(p) + "</td>" +
+        '<td class="caret">&rsaquo;</td>' +
+        "</tr>";
+    }).join("");
+
+    markActive();
+    updateFootnote(list.length);
+  }
+
+  function updateFootnote(shown) {
+    const total = (DATA.positions || []).length;
+    const src = (DATA.price_sources || []).join(", ") || "no source";
+    document.getElementById("footnote").innerHTML =
+      shown + " of " + total + " assets &middot; prices " + esc(src) +
+      " &middot; history &amp; ATH CoinGecko &middot; " +
+      esc((DATA.source || {}).label || "your sheet") +
+      " &middot; not investment advice";
+  }
+
+  /* ---------------------------------------------------------------- drawer */
+  function kv(label, value, cls) {
+    return "<div><span class=\"stat-label\">" + label + "</span><b class=\"" +
+      (cls || "") + "\">" + value + "</b></div>";
+  }
+
+  function drawerContent(p) {
+    const stale = p.price == null;
+
+    const position = '<section class="panel"><h3>Position</h3><div class="kv">' +
+      kv("Current price", stale ? "&mdash;" : money(p.price)) +
+      kv("Purchase price", money(p.purchase_price)) +
+      kv("Units owned", units(p.units)) +
+      kv("Invested", money(p.invested, 2)) +
+      kv("Current value", money(p.current_value, 2)) +
+      kv("Profit / loss", signed(p.pl), toneClass(p.pl)) +
+      kv("Profit / loss %", pct(p.pl_pct), toneClass(p.pl_pct)) +
+      "</div>" +
+      (stale ? '<p class="sub">Market data unavailable &mdash; last successful update: ' +
+        esc(DATA.last_good_display || "never") + "</p>" : "") +
+      "</section>";
+
+    const performance = '<section class="panel"><h3>Performance</h3><div class="kv">' +
+      kv("24 hours", pct(p.pct_24h), toneClass(p.pct_24h)) +
+      kv("7 days", pct(p.pct_7d), toneClass(p.pct_7d)) +
+      kv("30 days", pct(p.pct_30d), toneClass(p.pct_30d)) +
+      kv("1 year", pct(p.pct_1y), toneClass(p.pct_1y)) +
+      kv("All-time high", money(p.ath)) +
+      kv("ATH reached", p.ath_date ? shortDate(p.ath_date) : "&mdash;") +
+      kv("From ATH", pct(p.from_ath_pct), toneClass(p.from_ath_pct)) +
+      "</div>" + athBar(p) + "</section>";
+
+    const chart = '<section class="panel"><h3>Price<span class="range-row">' +
+      [[30, "1M"], [90, "3M"], [365, "1Y"]].map(function (r) {
+        return '<button type="button" data-days="' + r[0] + '" aria-pressed="' +
+          (state.chartDays === r[0]) + '">' + r[1] + "</button>";
+      }).join("") + "</span></h3>" +
+      '<div class="chart-box" id="chart-box">' + priceChart(p.series, state.chartDays) +
+      "</div></section>";
+
+    const lots = '<section class="panel"><h3>Purchase history</h3>' +
+      '<table class="lots"><thead><tr>' +
+      '<th class="left">Ref</th><th class="left">Date</th><th>Price</th><th>Units</th>' +
+      "<th>Cost</th><th>P/L</th></tr></thead><tbody>" +
+      (p.lots || []).map(function (l) {
+        const cost = l.purchase_price * l.units;
+        const now = p.price == null ? null : p.price * l.units - cost;
+        return "<tr>" +
+          '<td class="left">' + esc(l.ref || "") + "</td>" +
+          '<td class="left">' + (l.purchase_date ? shortDate(l.purchase_date) : "&mdash;") + "</td>" +
+          "<td>" + money(l.purchase_price) + "</td>" +
+          "<td>" + units(l.units) + "</td>" +
+          "<td>" + money(cost, 2) + "</td>" +
+          '<td class="' + toneClass(now) + '">' + signed(now) + "</td>" +
+          "</tr>";
+      }).join("") + "</tbody></table>" +
+      (p.lot_count > 1 ? '<p class="sub">Weighted average purchase price ' +
+        money(p.purchase_price) + " across " + p.lot_count + " purchases</p>" : "") +
+      ((p.exchanges || []).length ? '<p class="sub">Held on ' + esc(p.exchanges.join(", ")) + "</p>" : "") +
+      ((p.notes || []).length ? "<p>" + p.notes.map(esc).join(" &middot; ") + "</p>" : "") +
+      "</section>";
+
+    const items = p.news || [];
+    const newsPanel = '<section class="panel"><h3>Latest news</h3>' +
+      (items.length ? items.map(function (n) {
+        return '<div class="news-item"><a href="' + esc(n.link) + '" target="_blank" rel="noopener">' +
+          esc(n.title) + "</a>" +
+          '<div class="news-meta">' +
+          (n.category ? '<span class="tag">' + esc(n.category) + "</span>" : "") +
+          "<span>" + esc(n.publisher || "") + "</span>" +
+          (n.when ? "<span>" + esc(n.when) + "</span>" : "") + "</div>" +
+          (n.why ? '<p class="news-why">' + esc(n.why) + "</p>" : "") + "</div>";
+      }).join("") : "<p>Nothing material in the last month.</p>") + "</section>";
+
+    const provenance = '<section class="panel"><h3>Where these numbers come from</h3>' +
+      '<p class="sub" style="letter-spacing:.06em">Price ' +
+      esc(p.price_source || "unavailable") +
+      " &middot; history and ATH CoinGecko &middot; matched by " +
+      esc(p.resolved_by || "CoinGecko") +
+      (p.rank ? " &middot; market cap rank #" + p.rank : "") +
+      " &middot; snapshot " + esc(DATA.generated_display || "") + "</p></section>";
+
+    return position + performance + chart + lots + newsPanel + provenance;
+  }
+
+  function athBar(p) {
+    if (p.ath == null || p.price == null || p.ath <= 0) return "";
+    const at = Math.max(0, Math.min(100, p.price / p.ath * 100));
+    return '<div class="range"><div class="range-bar"><i style="left:' + at.toFixed(1) +
+      '%"></i></div><div class="range-ends"><span>0</span><span>' +
+      at.toFixed(0) + "% of ATH</span><span>" + money(p.ath) + "</span></div></div>";
+  }
+
+  function openDrawer(symbol) {
+    const p = (DATA.positions || []).find(function (x) { return x.symbol === symbol; });
+    if (!p) return;
+    state.open = symbol;
+
+    document.getElementById("drawer-name").textContent = p.symbol;
+    document.getElementById("drawer-sub").textContent =
+      (p.name || "") + (p.lot_count > 1 ? "  ·  " + p.lot_count + " purchases" : "") +
+      (p.ref ? "  ·  ref " + p.ref : "");
+
+    document.getElementById("drawer-figs").innerHTML = [
+      ["Current price", p.price == null ? "&mdash;" : money(p.price), ""],
+      ["Current value", money(p.current_value, 2), ""],
+      ["Profit / loss", signed(p.pl), toneClass(p.pl)],
+      ["P/L %", pct(p.pl_pct), toneClass(p.pl_pct)],
+      ["24 hrs", pct(p.pct_24h), toneClass(p.pct_24h)]
+    ].map(function (f) {
+      return '<div><span class="stat-label">' + f[0] + '</span><b class="' + f[2] + '">' +
+        f[1] + "</b></div>";
+    }).join("");
+
+    document.getElementById("drawer-body").innerHTML = drawerContent(p);
+
+    document.querySelectorAll("#drawer-body [data-days]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        state.chartDays = Number(btn.dataset.days);
+        document.querySelectorAll("#drawer-body [data-days]").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(Number(b.dataset.days) === state.chartDays));
+        });
+        document.getElementById("chart-box").innerHTML = priceChart(p.series, state.chartDays);
+      });
+    });
+
+    drawerEl.hidden = false;
+    requestAnimationFrame(function () {
+      drawerEl.classList.add("open");
+      scrimEl.classList.add("open");
+    });
+    markActive();
+  }
+
+  function closeDrawer() {
+    state.open = null;
+    drawerEl.classList.remove("open");
+    scrimEl.classList.remove("open");
+    markActive();
+    setTimeout(function () { if (!state.open) drawerEl.hidden = true; }, 280);
+  }
+
+  function markActive() {
+    document.querySelectorAll("tr.row").forEach(function (tr) {
+      tr.classList.toggle("active", tr.dataset.symbol === state.open);
+    });
+  }
+
+  rowsEl.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return;          // let a headline link through
+    const tr = e.target.closest("tr.row");
+    if (tr) openDrawer(tr.dataset.symbol);      // including the "+N more" button
+  });
+
+  rowsEl.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tr = e.target.closest("tr.row");
+    if (tr) { e.preventDefault(); openDrawer(tr.dataset.symbol); }
+  });
+
+  document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+  scrimEl.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && state.open) closeDrawer();
+  });
+
+  /* --------------------------------------------------------------- filters */
+  (function buildRefChips() {
+    const host = document.getElementById("ref-chips");
+    const seen = [];
+    (DATA.positions || []).forEach(function (p) {
+      (p.refs || []).forEach(function (r) {
+        // Only worth a chip when the refs group things, e.g. one per exchange.
+        if (r && seen.indexOf(r) === -1) seen.push(r);
+      });
+    });
+    if (seen.length < 2 || seen.length > 8) return;
+    host.innerHTML = seen.map(function (r) {
+      return '<button class="chip is-ref" data-ref="' + esc(r) + '" aria-pressed="false">' +
+        esc(r) + "</button>";
+    }).join("");
+    host.querySelectorAll(".chip[data-ref]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const value = btn.dataset.ref;
+        state.ref = state.ref === value ? "all" : value;
+        host.querySelectorAll(".chip[data-ref]").forEach(function (b) {
+          b.setAttribute("aria-pressed", String(b.dataset.ref === state.ref));
+        });
+        render();
+      });
+    });
+  })();
+
+  document.querySelectorAll(".chip[data-filter]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      state.filter = btn.dataset.filter;
+      document.querySelectorAll(".chip[data-filter]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.dataset.filter === state.filter));
+      });
+      render();
+    });
+  });
+
+  document.getElementById("search").addEventListener("input", function (e) {
+    state.query = e.target.value;
+    render();
+  });
+
+  document.querySelectorAll("thead th[data-sort]").forEach(function (th) {
+    th.addEventListener("click", function () {
+      const key = th.dataset.sort;
+      if (state.sort === key) state.dir = -state.dir;
+      else { state.sort = key; state.dir = key === "symbol" || key === "ref" ? 1 : -1; }
+      document.querySelectorAll(".arrow").forEach(function (a) { a.textContent = ""; });
+      th.querySelector(".arrow").textContent = state.dir > 0 ? "▲" : "▼";
+      render();
+    });
+  });
+
+  shellEl.addEventListener("scroll", function () {
+    shellEl.classList.toggle("is-pinned", shellEl.scrollLeft > 2);
+  });
+
+  /* --------------------------------------------------------------- refresh */
+  (function wireRefresh() {
+    const btn = document.getElementById("refresh-now");
+    const line = document.getElementById("stamp-line");
+    const meta = document.getElementById("stamp-meta");
+    let polling = null;
+
+    const baseMeta = function () {
+      const counts = DATA.counts || {};
+      return (counts.purchases || 0) + " purchases · " +
+             (counts.assets || 0) + " assets";
+    };
+
+    function status() {
+      return fetch("healthz", { cache: "no-store" }).then(function (r) {
+        if (!r.ok) throw new Error("no server");
+        return r.json();
+      });
+    }
+
+    function watch() {
+      btn.disabled = true;
+      meta.textContent = "refreshing …";
+      if (polling) clearInterval(polling);
+      polling = setInterval(function () {
+        status().then(function (s) {
+          if (s.building) return;
+          clearInterval(polling);
+          polling = null;
+          if (s.error) {
+            btn.disabled = false;
+            line.classList.add("is-error");
+            meta.textContent = s.error;
+          } else {
+            location.reload();
+          }
+        }).catch(function () {
+          clearInterval(polling);
+          polling = null;
+          btn.disabled = false;
+          meta.textContent = baseMeta();
+        });
+      }, 1500);
+    }
+
+    meta.textContent = baseMeta();
+    status().then(function (s) {
+      btn.hidden = false;
+      if (s.building) watch();
+    }).catch(function () { /* opened as a plain file - nothing to refresh against */ });
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      fetch("refresh", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function () { watch(); })
+        .catch(function () {
+          btn.disabled = false;
+          meta.textContent = "could not reach the local server";
+        });
+    });
+  })();
+
+  /* ------------------------------------------------------------------ boot */
+  // Make the table fill exactly what is left of the window. A fixed max-height
+  // either overflows the viewport - giving two scrollbars, the page and the
+  // table - or wastes space when the header is short.
+  function fitTable() {
+    const shell = document.getElementById("shell");
+    const foot = document.getElementById("footnote");
+    const top = shell.getBoundingClientRect().top + window.scrollY;
+    // The footnote, the flex gap above it, the wrap's bottom padding and the
+    // shell's own borders all sit below the scrolling area.
+    const reserve = (foot ? foot.getBoundingClientRect().height : 0) + 32;
+    // If the summary leaves too little room the page may scroll again -
+    // better that than a table only a few rows tall.
+    shell.style.maxHeight =
+      Math.max(380, window.innerHeight - top - reserve) + "px";
+  }
+
+  function applySummary(hidden) {
+    const btn = document.getElementById("toggle-summary");
+    if (hidden === document.body.classList.contains("no-summary")) return;
+    document.body.classList.toggle("no-summary", hidden);
+    btn.textContent = hidden ? "Show totals" : "Hide totals";
+    btn.setAttribute("aria-pressed", String(hidden));
+    fitTable();
+  }
+
+  // The summary would otherwise sit there taking half the window for good.
+  // Scrolling into the table folds it away and hands that space to the rows;
+  // scrolling back to the top brings it back. The two thresholds are deliberate
+  // - one value would flicker on and off at the boundary, because hiding the
+  // summary changes the very scroll position being measured.
+  function autoSummary() {
+    if (state.summaryMode !== "auto") return;
+    const y = shellEl.scrollTop;
+    if (y > 40) applySummary(true);
+    else if (y < 8) applySummary(false);
+  }
+
+  shellEl.addEventListener("scroll", autoSummary, { passive: true });
+
+  document.getElementById("toggle-summary").addEventListener("click", function () {
+    const hide = !document.body.classList.contains("no-summary");
+    // Hiding it is a decision, and pins it shut. Showing it again just returns
+    // to the default, so there is no way to get stuck with the summary pinned
+    // open and the folding gone for good.
+    state.summaryMode = hide ? "hidden" : "auto";
+    try { localStorage.setItem("crypto-ledger-summary", state.summaryMode); }
+    catch (e) { /* private mode */ }
+    applySummary(hide);
+  });
+
+  window.addEventListener("resize", fitTable);
+
+  document.getElementById("stamp-time").textContent = DATA.generated_display || "—";
+  renderTotals();
+  renderNotices();
+  render();
+
+  try { state.summaryMode = localStorage.getItem("crypto-ledger-summary") || "auto"; }
+  catch (e) { state.summaryMode = "auto"; }
+  document.body.classList.add("no-summary");          // so applySummary sees a change
+  applySummary(state.summaryMode === "hidden");
+  fitTable();
+</script>
+</body>
+</html>

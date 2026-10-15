@@ -1,0 +1,5 @@
+{
+  "_comment": "Only needed when a symbol is ambiguous. Map what you type in the sheet to a CoinGecko coin id (the last part of its coingecko.com/en/coins/... address).",
+  "_example_GRT": "the-graph",
+  "_example_APE": "apecoin"
+}

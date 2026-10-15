@@ -1,0 +1,6 @@
+our ref,asset,symbol,purchase price,units purchased,purchase date,exchange,notes
+C001,Bitcoin,BTC,92000,0.5,2025-01-15,Coinbase,First tranche
+C002,Ethereum,ETH,2400,4,2025-02-02,Binance,
+C003,Bitcoin,BTC,105000,0.25,2025-06-10,Coinbase,Added on the breakout
+C004,Solana,SOL,148.50,20,2025-03-11,Coinbase,
+C005,XRP,XRP,2.15,1500,2025-04-02,Binance,

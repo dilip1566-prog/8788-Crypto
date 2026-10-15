@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy this to source.json, or just run: python refresh.py --sheet <your link>  (which writes it for you). source.json is gitignored, so your sheet stays private.",
+  "sheet": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
+  "gid": null
+}
